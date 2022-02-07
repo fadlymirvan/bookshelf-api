@@ -100,9 +100,85 @@ const getBookByIdHandler = (req, res) => {
   return response;
 };
 
-const updateBooksHandler = () => {};
+const updateBooksHandler = (req, res) => {
+  const { bookId } = req.params;
+  const index = bookshelf.findIndex((book) => book.id === bookId);
+  const {
+    name, year, author, summary, publisher, pageCount, readPage, reading,
+  } = req.payload;
+  const finished = pageCount === readPage;
+  const updatedAt = new Date().toISOString();
 
-const deleteBooksHandler = () => {};
+  if (name === undefined) {
+    const response = res.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. Mohon isi nama buku',
+    });
+    response.code(400);
+    return response;
+  }
+
+  if (readPage > pageCount) {
+    const response = res.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount',
+    });
+    response.code(400);
+    return response;
+  }
+
+  if (index !== -1) {
+    bookshelf[index] = {
+      ...bookshelf[index],
+      name,
+      year,
+      author,
+      summary,
+      publisher,
+      pageCount,
+      readPage,
+      finished,
+      reading,
+      updatedAt,
+    };
+
+    const response = res.response({
+      status: 'success',
+      message: 'Buku berhasil diperbarui',
+    });
+    response.code(200);
+    return response;
+  }
+
+  const response = res.response({
+    status: 'fail',
+    message: 'Gagal memperbarui buku. Id tidak ditemukan',
+  });
+  response.code(404);
+  return response;
+};
+
+const deleteBooksHandler = (req, res) => {
+  const { bookId } = req.params;
+  const index = bookshelf.findIndex((book) => book.id === bookId);
+
+  if (index !== -1) {
+    bookshelf.splice(index, 1);
+    const response = res.response({
+      status: 'success',
+      message: 'Buku berhasil dihapus',
+    });
+    response.code(200);
+    return response;
+  }
+
+  const response = res.response({
+    status: 'fail',
+    message: 'Buku gagal dihapus. Id tidak ditemukan',
+  });
+  response.code(404);
+  return response;
+};
 
 module.exports = {
   addBookHandler,
