@@ -67,16 +67,36 @@ const addBookHandler = (req, res) => {
   return response;
 };
 
-const getAllBooksHandler = () => ({
-  status: 'success',
-  data: {
-    books: bookshelf.map(({ id, name, publisher }) => ({
-      id,
-      name,
-      publisher,
-    })),
-  },
-});
+const responseData = (books) => {
+  const {
+    id, name, publisher,
+  } = books;
+  return {
+    id, name, publisher,
+  };
+};
+
+const getAllBooksHandler = (req, res) => {
+  const { name, reading, finished } = req.query;
+  let filteredBooks = bookshelf;
+  if (name !== undefined) {
+    filteredBooks = bookshelf.filter((bs) => (bs.name.toLowerCase().includes(name.toLowerCase())));
+  } else if (reading !== undefined) {
+    filteredBooks = bookshelf.filter((bs) => (bs.reading === (reading !== '0')));
+  } else if (finished !== undefined) {
+    filteredBooks = bookshelf.filter((bs) => (bs.finished === (finished !== '0')));
+  }
+
+  const data = filteredBooks.map(responseData);
+  const response = res.response({
+    status: 'success',
+    data: {
+      books: data,
+    },
+  });
+  response.code(200);
+  return response;
+};
 
 const getBookByIdHandler = (req, res) => {
   const { bookId } = req.params;
